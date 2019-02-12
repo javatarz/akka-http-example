@@ -2,7 +2,9 @@ package me.karun.http.akka
 
 import akka.actor.{Actor, ActorLogging, Props}
 import me.karun.http.akka.models.{User, Users}
+import me.karun.http.akka.repository.UserRepository
 
+import scala.concurrent.ExecutionContextExecutor
 
 object UserRegistryActor {
 
@@ -20,11 +22,13 @@ object UserRegistryActor {
 
 }
 
-class UserRegistryActor extends Actor with ActorLogging {
+class UserRegistryActor() extends Actor with ActorLogging {
 
   import UserRegistryActor._
 
-  private val users = Set.empty[User]
+  private val userRepository = new UserRepository()
+
+  private val users: Set[User] = userRepository.fetchAllUsers()
 
   def receive: Receive = onMessage(users)
 
@@ -37,7 +41,8 @@ class UserRegistryActor extends Actor with ActorLogging {
     case GetUser(name) =>
       sender() ! users.find(_.name == name)
     case DeleteUser(name) =>
-      val deletedUserCount = users.find(_.name == name)
+      val deletedUserCount = users
+        .find(_.name == name)
         .map(user => {
           context.become(onMessage(users - user))
           1
@@ -45,6 +50,7 @@ class UserRegistryActor extends Actor with ActorLogging {
         .sum
 
       val suffix = if (deletedUserCount == 1) "" else "s"
-      sender() ! ActionPerformed(s"$deletedUserCount user$suffix named $name were deleted.")
+      sender() ! ActionPerformed(
+        s"$deletedUserCount user$suffix named $name were deleted.")
   }
 }
