@@ -7,7 +7,8 @@ object Dependencies {
                                   Akka.`spray-json`,
                                   Common.`scala-logging`,
                                   Common.`logger-api`,
-                                  Common.logger)
+                                  Common.logger,
+                                  Common.`scala-java8-compat`)
 
   private val serverTest = Seq(Akka.TestOnly.scalatest,
 //    Akka.TestOnly.`stream-test-kit`,

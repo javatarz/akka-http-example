@@ -11,5 +11,6 @@ trait JsonSupport extends SprayJsonSupport {
   implicit val userJsonFormat: RootJsonFormat[User] = jsonFormat3(User)
   implicit val usersJsonFormat: RootJsonFormat[Users] = jsonFormat1(Users)
 
-  implicit val actionPerformedJsonFormat: RootJsonFormat[ActionPerformed] = jsonFormat1(ActionPerformed)
+  implicit val actionPerformedJsonFormat: RootJsonFormat[ActionPerformed] =
+    jsonFormat1(ActionPerformed)
 }

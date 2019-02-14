@@ -1,10 +1,11 @@
 package me.karun.http.akka
 
 import akka.actor.{Actor, ActorLogging, Props}
-import me.karun.http.akka.models.{User, Users}
+import me.karun.http.akka.models.User
 import me.karun.http.akka.repository.UserRepository
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object UserRegistryActor {
 
@@ -26,31 +27,35 @@ class UserRegistryActor() extends Actor with ActorLogging {
 
   import UserRegistryActor._
 
+  private implicit val executionContext: ExecutionContext =
+    this.context.dispatcher
+
   private val userRepository = new UserRepository()
 
-  private val users: Set[User] = userRepository.fetchAllUsers()
+  def receive: Receive = onMessage()
 
-  def receive: Receive = onMessage(users)
-
-  private def onMessage(users: Set[User]): Receive = {
+  private def onMessage(): Receive = {
     case GetUsers =>
-      sender() ! Users(users.toSeq)
+      sender() ! userRepository.fetchAll()
     case CreateUser(user) =>
-      context.become(onMessage(users + user))
-      sender() ! ActionPerformed(s"User ${user.name} created.")
+      val suffix = resolveTry(userRepository.create(user))
+      sender() ! ActionPerformed(s"$suffix creating User ${user.name} ")
     case GetUser(name) =>
-      sender() ! users.find(_.name == name)
+      sender() ! userRepository.fetchAll().map(_.users.find(_.name == name))
     case DeleteUser(name) =>
-      val deletedUserCount = users
-        .find(_.name == name)
-        .map(user => {
-          context.become(onMessage(users - user))
-          1
-        })
-        .sum
+      val suffix = resolveTry(userRepository.delete(name))
+      sender() ! ActionPerformed(s"$suffix deleting User named $name.")
+  }
 
-      val suffix = if (deletedUserCount == 1) "" else "s"
-      sender() ! ActionPerformed(
-        s"$deletedUserCount user$suffix named $name were deleted.")
+  private def resolveTry(result: Try[Any]): String = {
+    val suffix =
+      if (result.isSuccess)
+        "Successful in"
+      else {
+        log.error(result.failed.get,
+                  "Failed while performing write action to DB.")
+        "Failed while"
+      }
+    suffix
   }
 }

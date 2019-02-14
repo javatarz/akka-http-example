@@ -30,7 +30,7 @@ object QuickstartServer extends App with UserRoutes {
 
     InMemoryNeo4j.run(cypher, Map())
 
-    logger.info("Successfully preloaded data into InMemoryDB")
+    logger.info("Successfully loaded data to database")
   }
 
   serverBinding.onComplete {

@@ -34,7 +34,7 @@ object Libs {
     val `scala-logging` = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
     val `logger-api` = "org.slf4j" % "slf4j-api" % `logging-version`
     val logger = "org.slf4j" % "slf4j-simple" % `logging-version`
-    val `scala-java8-compat` = "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0"
+    val `scala-java8-compat` = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   }
 
 }

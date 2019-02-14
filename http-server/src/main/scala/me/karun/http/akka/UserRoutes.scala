@@ -13,6 +13,7 @@ import com.typesafe.scalalogging.LazyLogging
 import me.karun.http.akka.UserRegistryActor._
 import me.karun.http.akka.models.{JsonSupport, User, Users}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 trait UserRoutes extends JsonSupport with LazyLogging {
@@ -24,12 +25,15 @@ trait UserRoutes extends JsonSupport with LazyLogging {
         pathEnd {
           concat(
             get {
-              complete((userRegistryActor ? GetUsers).mapTo[Users])
+              logger.info("Get all users api was called.")
+              complete((userRegistryActor ? GetUsers).mapTo[Future[Users]])
             },
             post {
               entity(as[User]) { user =>
-                onSuccess((userRegistryActor ? CreateUser(user)).mapTo[ActionPerformed]) { performed =>
-                  logger.info(s"Created user [${user.name}]: ${performed.description}")
+                onSuccess((userRegistryActor ? CreateUser(user))
+                  .mapTo[ActionPerformed]) { performed =>
+                  logger.info(
+                    s"Created user [${user.name}]: ${performed.description}")
                   complete((StatusCodes.Created, performed))
                 }
               }
@@ -40,13 +44,16 @@ trait UserRoutes extends JsonSupport with LazyLogging {
           concat(
             get {
               rejectEmptyResponse {
-                complete((userRegistryActor ? GetUser(name)).mapTo[Option[User]])
+                complete((userRegistryActor ? GetUser(name))
+                  .mapTo[Future[Option[User]]])
               }
             },
             delete {
-              onSuccess((userRegistryActor ? DeleteUser(name)).mapTo[ActionPerformed]) { performed =>
-                logger.info(s"Deleted user [$name]: ${performed.description}")
-                complete((StatusCodes.OK, performed))
+              onSuccess(
+                (userRegistryActor ? DeleteUser(name)).mapTo[ActionPerformed]) {
+                performed =>
+                  logger.info(s"Deleted user [$name]: ${performed.description}")
+                  complete((StatusCodes.OK, performed))
               }
             }
           )
@@ -55,7 +62,8 @@ trait UserRoutes extends JsonSupport with LazyLogging {
     }
 
   // Required by the `ask` (?) method below
-  implicit lazy val timeout: Timeout = Timeout(5.seconds) // usually we'd obtain the timeout from the system's configuration
+  implicit lazy val timeout
+    : Timeout = Timeout(5.seconds) // usually we'd obtain the timeout from the system's configuration
 
   def userRegistryActor: ActorRef
 }
