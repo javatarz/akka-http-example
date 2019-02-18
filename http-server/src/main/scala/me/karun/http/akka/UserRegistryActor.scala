@@ -1,6 +1,7 @@
 package me.karun.http.akka
 
 import akka.actor.{Actor, ActorLogging, Props}
+import com.typesafe.scalalogging.LazyLogging
 import me.karun.http.akka.models.User
 import me.karun.http.akka.repository.UserRepository
 
@@ -21,6 +22,24 @@ object UserRegistryActor {
 
   final case object GetUsers
 
+  implicit class ActionPerformedExtensions(user: Try[Any]) extends LazyLogging {
+    def toCreateActionPerformed(name: String): ActionPerformed =
+      ActionPerformed(s"$suffix creating User $name.")
+
+    def toDeleteActionPerformed(name: String): ActionPerformed =
+      ActionPerformed(s"$suffix deleting User named $name.")
+
+    def suffix: String = {
+      if (user.isSuccess)
+        "Successful in"
+      else {
+        logger.error("Failed while performing write action to DB.",
+                     user.failed.get)
+        "Failed while"
+      }
+    }
+  }
+
 }
 
 class UserRegistryActor() extends Actor with ActorLogging {
@@ -38,23 +57,11 @@ class UserRegistryActor() extends Actor with ActorLogging {
     case GetUsers =>
       sender() ! userRepository.fetchAll()
     case CreateUser(user) =>
-      val suffix = resolveTry(userRepository.create(user))
-      sender() ! ActionPerformed(s"$suffix creating User ${user.name} ")
+      sender() ! userRepository.create(user).toCreateActionPerformed(user.name)
     case GetUser(name) =>
       sender() ! userRepository.fetchAll().map(_.users.find(_.name == name))
     case DeleteUser(name) =>
-      val suffix = resolveTry(userRepository.delete(name))
-      sender() ! ActionPerformed(s"$suffix deleting User named $name.")
+      sender() ! userRepository.delete(name).toDeleteActionPerformed(name)
   }
 
-  private def resolveTry(result: Try[Any]): String = {
-    val suffix =
-      if (result.isSuccess)
-        "Successful in"
-      else {
-        log.error(result.failed.get, "Failed while performing write action to DB.")
-        "Failed while"
-      }
-    suffix
-  }
 }
