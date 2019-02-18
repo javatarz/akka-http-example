@@ -19,6 +19,7 @@ import scala.concurrent.duration._
 trait UserRoutes extends JsonSupport with LazyLogging {
 
   implicit def system: ActorSystem
+
   lazy val userRoutes: Route =
     pathPrefix("users") {
       concat(
@@ -61,9 +62,7 @@ trait UserRoutes extends JsonSupport with LazyLogging {
       )
     }
 
-  // Required by the `ask` (?) method below
-  implicit lazy val timeout
-    : Timeout = Timeout(5.seconds) // usually we'd obtain the timeout from the system's configuration
+  implicit lazy val timeout: Timeout = Timeout(5.seconds)
 
   def userRegistryActor: ActorRef
 }

@@ -5,7 +5,7 @@ object Libs {
   object Akka {
     private val akkaHttpVersion = "10.1.7"
     private val akkaVersion = "2.5.20"
-
+    
     val http = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
     val stream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
     val `spray-json` = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
@@ -19,7 +19,6 @@ object Libs {
   }
 
   object Neo4j {
-
     val neo4j = "org.neo4j" % "neo4j" % "3.3.2"
     val `neo4j-java-driver` = "org.neo4j.driver" % "neo4j-java-driver" % "1.5.1"
 
@@ -30,7 +29,7 @@ object Libs {
 
   object Common {
     private val `logging-version` = "1.8.0-beta2"
-
+    
     val `scala-logging` = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
     val `logger-api` = "org.slf4j" % "slf4j-api" % `logging-version`
     val logger = "org.slf4j" % "slf4j-simple" % `logging-version`

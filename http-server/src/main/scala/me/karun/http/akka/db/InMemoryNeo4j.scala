@@ -22,7 +22,7 @@ object InMemoryNeo4j extends LazyLogging {
 
   private val dbStorePath =
     new File(System.getProperty("java.io.tmpdir"),
-             java.util.UUID.randomUUID().toString + ".db")
+      java.util.UUID.randomUUID().toString + ".db")
   private val connector = new BoltConnector()
 
   private val hostNamePort = s"localhost:$port"
@@ -32,7 +32,7 @@ object InMemoryNeo4j extends LazyLogging {
     .setConfig(connector.enabled, "true")
     .setConfig(connector.listen_address, hostNamePort)
     .setConfig(connector.encryption_level,
-               connector.encryption_level.getDefaultValue)
+      connector.encryption_level.getDefaultValue)
     .newGraphDatabase()
 
   private val driver: Driver =
@@ -46,7 +46,7 @@ object InMemoryNeo4j extends LazyLogging {
   }.asScala
 
   def readAllAysnc(query: String, params: Map[String, AnyRef])(
-      implicit executionContext: ExecutionContext): Future[Seq[Record]] =
+    implicit executionContext: ExecutionContext): Future[Seq[Record]] =
     driver.session().readAllAsync(query, params)(_.listAsync().toScala)
 
   def write(query: String, params: Map[String, Any]): Try[Seq[Record]] =
@@ -55,8 +55,8 @@ object InMemoryNeo4j extends LazyLogging {
   implicit class SessionExtensions(session: Session) {
 
     def readAllAsync(query: String, params: Map[String, AnyRef])(
-        pf: StatementResultCursor => Future[java.util.List[Record]])(
-        implicit executionContext: ExecutionContext): Future[Seq[Record]] = {
+      pf: StatementResultCursor => Future[java.util.List[Record]])(
+                      implicit executionContext: ExecutionContext): Future[Seq[Record]] = {
       val result = session
         .runAsync(query, params.asJava)
         .toScala
@@ -71,7 +71,7 @@ object InMemoryNeo4j extends LazyLogging {
         override def execute(tx: Transaction): Try[Seq[Record]] = {
           Try {
             tx.run(query,
-                   params.map(t => (t._1, t._2.asInstanceOf[AnyRef])).asJava)
+              params.map(t => (t._1, t._2.asInstanceOf[AnyRef])).asJava)
               .asScala
               .toSeq
           }.map(records => {
@@ -83,4 +83,5 @@ object InMemoryNeo4j extends LazyLogging {
       })
     }
   }
+
 }

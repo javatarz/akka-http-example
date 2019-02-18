@@ -52,8 +52,7 @@ class UserRegistryActor() extends Actor with ActorLogging {
       if (result.isSuccess)
         "Successful in"
       else {
-        log.error(result.failed.get,
-                  "Failed while performing write action to DB.")
+        log.error(result.failed.get, "Failed while performing write action to DB.")
         "Failed while"
       }
     suffix
