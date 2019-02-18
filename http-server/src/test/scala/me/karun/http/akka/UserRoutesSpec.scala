@@ -1,16 +1,17 @@
 package me.karun.http.akka
 
-import akka.actor.ActorRef
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import me.karun.http.akka.db.InMemoryNeo4j
 import me.karun.http.akka.models.User
+import me.karun.http.akka.repository.UserRepository
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 
-class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with UserRoutes {
-  override val userRegistryActor: ActorRef = system.actorOf(UserRegistryActor.props, "userRegistry")
+import scala.io.Source
 
+class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with UserRoutes with BeforeAndAfterAll {
   "UserRoutes" should {
     "return no users if no present (GET /users)" in {
       // note that there's no need for the host part in the uri:
@@ -23,7 +24,7 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
         contentType should ===(ContentTypes.`application/json`)
 
         // and no entries should be in the list:
-        entityAs[String] should ===("""{"users":[]}""")
+        entityAs[String] should ===("""{"users":[{"age":55,"countryOfResidence":"US","name":"John"},{"age":35,"countryOfResidence":"IN","name":"Rajeev"},{"age":29,"countryOfResidence":"CA","name":"Ryan"}]}""")
       }
     }
 
@@ -41,7 +42,7 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
         contentType should ===(ContentTypes.`application/json`)
 
         // and we know what message we're expecting back:
-        entityAs[String] should ===("""{"description":"User Kapi created."}""")
+        entityAs[String] should ===("""{"description":"Successful in creating User Kapi"}""")
       }
     }
 
@@ -56,8 +57,18 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
         contentType should ===(ContentTypes.`application/json`)
 
         // and no entries should be in the list:
-        entityAs[String] should ===("""{"description":"1 user named Kapi were deleted."}""")
+        entityAs[String] should ===("""{"description":"Successful in deleting User named Kapi."}""")
       }
     }
+  }
+
+  override def userRepository: UserRepository = new UserRepository()
+
+  override protected def beforeAll(): Unit = {
+    val cypher = Source
+      .fromURL(getClass.getResource("/preload-graph.cypher"))
+      .mkString
+
+    InMemoryNeo4j.run(cypher, Map())
   }
 }
